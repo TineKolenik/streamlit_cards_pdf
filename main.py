@@ -2,7 +2,7 @@ import streamlit as st
 from PIL import Image
 from fpdf import FPDF
 import os
-import time
+import random
 
 # Constants
 CARD_WIDTH_INCH = 2.48
@@ -26,6 +26,7 @@ TEXT_MARGIN_PT = 6  # Space above the image for the filename
 CARDS_PER_ROW = 3
 CARDS_PER_COLUMN = 3
 
+
 def create_pdf(images, output_pdf):
     # Create PDF object
     pdf = FPDF('P', 'pt', (A4_WIDTH_PT, A4_HEIGHT_PT))
@@ -42,7 +43,7 @@ def create_pdf(images, output_pdf):
     # Process images in chunks of 9
     for i in range(0, len(images), 9):
         pdf.add_page()
-        chunk = images[i:i+9]
+        chunk = images[i:i + 9]
         for j, image_file in enumerate(chunk):
             img = Image.open(image_file)
             img = img.resize((int(CARD_WIDTH_INCH * DPI), int(CARD_HEIGHT_INCH * DPI)), Image.LANCZOS)
@@ -78,9 +79,51 @@ def create_pdf(images, output_pdf):
 
     return pdf_bytes
 
+
+# Define a simple Pokémon class
+class Pokemon:
+    def __init__(self, name, hp, attack, attack_name):
+        self.name = name
+        self.hp = hp
+        self.attack = attack
+        self.attack_name = attack_name
+
+    def take_damage(self, damage):
+        self.hp -= damage
+        if self.hp < 0:
+            self.hp = 0
+
+    def is_fainted(self):
+        return self.hp == 0
+
+
+# Define Pokémon and Easter Eggs
+pokemon_list = [
+    Pokemon(name="Pikachu", hp=100, attack=20, attack_name="Thunderbolt"),
+    Pokemon(name="Charizard", hp=120, attack=25, attack_name="Flamethrower"),
+    Pokemon(name="Squirtle", hp=90, attack=18, attack_name="Water Gun"),
+    Pokemon(name="Bulbasaur", hp=100, attack=15, attack_name="Vine Whip"),
+    Pokemon(name="Jigglypuff", hp=80, attack=10, attack_name="Sing"),
+    Pokemon(name="Mewtwo", hp=150, attack=30, attack_name="Psychic")
+]
+
+easter_eggs = [
+    Pokemon(name="Space Marine", hp=200, attack=50, attack_name="Bolter"),
+    Pokemon(name="Gandalf", hp=180, attack=40, attack_name="You Shall Not Pass"),
+    Pokemon(name="Sauron", hp=250, attack=60, attack_name="Mace of Doom")
+]
+
+
+# Function to randomly choose an Easter Egg character with a small chance
+def random_easter_egg():
+    if random.random() < 0.05:  # 5% chance to trigger an Easter Egg
+        return random.choice(easter_eggs)
+    return None
+
+
 # Streamlit app
 st.set_page_config(
-    page_title="Card Proxy PDF Generator",
+    page_title="Card Proxy PDF Generator & Pokémon Battle",
     page_icon="🎴",
     layout="wide",
 )
@@ -126,22 +169,20 @@ st.markdown("""
         height: 1px;
         background-color: #cccccc;
     }
+    .dont-click-me {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 st.markdown("<h1 style='text-align: center;'>Card Proxy PDF Generator</h1>", unsafe_allow_html=True)
-st.markdown("<h3 style='text-align: center;'>Create Your Own Pokemon or MTG Proxies</h3>", unsafe_allow_html=True)
+st.markdown("<h3 style='text-align: center;'>Create Your Own Pokémon or MTG Proxies and Battle Pokémon!</h3>",
+            unsafe_allow_html=True)
 
-st.markdown(
-    """
-    This app allows you to upload your card images (in PNG format) and generate a PDF file with the cards laid out 
-    in A4 size, ready to print and cut out. Perfect for creating your own proxy cards for Pokemon or Magic: The Gathering.
-    """,
-    unsafe_allow_html=True
-)
-
-# Upload PNG files
-uploaded_files = st.file_uploader("Choose PNG files", accept_multiple_files=True, type=["png"])
+# Upload PNG or JPG files
+uploaded_files = st.file_uploader("Choose PNG or JPG files", accept_multiple_files=True, type=["png", "jpg"])
 
 if uploaded_files:
     if st.button("Generate PDF"):
@@ -167,3 +208,58 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
+
+# Secret Pokémon Battle Button
+if st.button("DON'T CLICK ME"):
+    st.session_state.show_battle = True
+
+# Check if the battle game should be shown
+if st.session_state.get("show_battle", False):
+    st.markdown("<h3 style='text-align: center;'>Pokémon Battle Game</h3>", unsafe_allow_html=True)
+
+    if "game_started" not in st.session_state:
+        st.session_state.game_started = False
+        st.session_state.player_pokemon = None
+        st.session_state.enemy_pokemon = None
+
+    if not st.session_state.game_started:
+        player_choice = st.selectbox("Choose your Pokémon", [p.name for p in pokemon_list])
+        if st.button("Start Battle"):
+            st.session_state.player_pokemon = next(p for p in pokemon_list if p.name == player_choice)
+            st.session_state.enemy_pokemon = random_easter_egg() or random.choice(pokemon_list)
+            st.session_state.game_started = True
+            st.session_state.player_hp = st.session_state.player_pokemon.hp
+            st.session_state.enemy_hp = st.session_state.enemy_pokemon.hp
+            st.write(f"A wild {st.session_state.enemy_pokemon.name} appeared!")
+    else:
+        player_pokemon = st.session_state.player_pokemon
+        enemy_pokemon = st.session_state.enemy_pokemon
+
+        st.write(f"**{player_pokemon.name}** HP: {st.session_state.player_hp}")
+        st.write(f"**{enemy_pokemon.name}** HP: {st.session_state.enemy_hp}")
+
+        if st.session_state.player_hp > 0 and st.session_state.enemy_hp > 0:
+            if st.button(f"Attack with {player_pokemon.attack_name}"):
+                # Player attacks the enemy Pokémon
+                enemy_damage = random.randint(5, player_pokemon.attack)
+                enemy_pokemon.take_damage(enemy_damage)
+                st.session_state.enemy_hp = enemy_pokemon.hp
+                st.write(f"{player_pokemon.name} dealt {enemy_damage} damage to {enemy_pokemon.name}!")
+
+                # Enemy Pokémon counterattacks
+                if not enemy_pokemon.is_fainted():
+                    player_damage = random.randint(5, enemy_pokemon.attack)
+                    player_pokemon.take_damage(player_damage)
+                    st.session_state.player_hp = player_pokemon.hp
+                    st.write(f"{enemy_pokemon.name} dealt {player_damage} damage to {player_pokemon.name}!")
+
+        if enemy_pokemon.is_fainted():
+            st.success(f"You defeated the wild {enemy_pokemon.name}!")
+        elif player_pokemon.is_fainted():
+            st.error(f"Your {player_pokemon.name} fainted!")
+
+        if st.session_state.player_hp <= 0 or st.session_state.enemy_hp <= 0:
+            if st.button("Play Again"):
+                st.session_state.game_started = False
+                st.session_state.player_hp = player_pokemon.hp
+                st.session_state.enemy_hp = enemy_pokemon.hp
