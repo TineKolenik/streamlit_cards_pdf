@@ -65,9 +65,18 @@ def create_pdf(images, output_pdf):
             # Remove temporary image
             os.remove(temp_image)
 
-    # Save PDF to a bytes buffer
-    pdf_buffer = pdf.output(dest='S').encode('latin1')
-    return pdf_buffer
+    # Save the PDF to a temporary file
+    temp_pdf_path = "output.pdf"
+    pdf.output(temp_pdf_path, 'F')
+
+    # Read the PDF file as bytes
+    with open(temp_pdf_path, "rb") as f:
+        pdf_bytes = f.read()
+
+    # Remove the temporary PDF file
+    os.remove(temp_pdf_path)
+
+    return pdf_bytes
 
 # Streamlit app
 st.set_page_config(
