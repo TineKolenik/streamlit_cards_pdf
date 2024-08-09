@@ -2,6 +2,7 @@ import streamlit as st
 from PIL import Image
 from fpdf import FPDF
 import os
+import time
 import random
 
 # Constants
@@ -25,7 +26,6 @@ TEXT_MARGIN_PT = 6  # Space above the image for the filename
 # Number of cards per row and column
 CARDS_PER_ROW = 3
 CARDS_PER_COLUMN = 3
-
 
 def create_pdf(images, output_pdf):
     # Create PDF object
@@ -79,7 +79,6 @@ def create_pdf(images, output_pdf):
 
     return pdf_bytes
 
-
 # Define a simple Pokémon class
 class Pokemon:
     def __init__(self, name, hp, attack, attack_name):
@@ -95,7 +94,6 @@ class Pokemon:
 
     def is_fainted(self):
         return self.hp == 0
-
 
 # Define Pokémon and Easter Eggs
 pokemon_list = [
@@ -113,13 +111,11 @@ easter_eggs = [
     Pokemon(name="Sauron", hp=250, attack=60, attack_name="Mace of Doom")
 ]
 
-
 # Function to randomly choose an Easter Egg character with a small chance
 def random_easter_egg():
     if random.random() < 0.05:  # 5% chance to trigger an Easter Egg
         return random.choice(easter_eggs)
     return None
-
 
 # Streamlit app
 st.set_page_config(
@@ -169,17 +165,11 @@ st.markdown("""
         height: 1px;
         background-color: #cccccc;
     }
-    .dont-click-me {
-        position: fixed;
-        bottom: 20px;
-        left: 20px;
-    }
 </style>
 """, unsafe_allow_html=True)
 
 st.markdown("<h1 style='text-align: center;'>Card Proxy PDF Generator</h1>", unsafe_allow_html=True)
-st.markdown("<h3 style='text-align: center;'>Create Your Own Pokémon or MTG Proxies and Battle Pokémon!</h3>",
-            unsafe_allow_html=True)
+st.markdown("<h3 style='text-align: center;'>Create Your Own Pokémon or MTG Proxies and Battle Pokémon!</h3>", unsafe_allow_html=True)
 
 # Upload PNG or JPG files
 uploaded_files = st.file_uploader("Choose PNG or JPG files", accept_multiple_files=True, type=["png", "jpg"])
@@ -261,5 +251,5 @@ if st.session_state.get("show_battle", False):
         if st.session_state.player_hp <= 0 or st.session_state.enemy_hp <= 0:
             if st.button("Play Again"):
                 st.session_state.game_started = False
-                st.session_state.player_hp = player_pokemon.hp
-                st.session_state.enemy_hp = enemy_pokemon.hp
+                st.session_state.player_hp = 0
+                st.session_state.enemy_hp = 0
