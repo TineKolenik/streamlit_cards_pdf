@@ -68,7 +68,8 @@ def create_pdf(images, output_pdf):
 
     # Save the PDF to a temporary file
     temp_pdf_path = "output.pdf"
-    pdf.output(temp_pdf_path, 'F')
+    pdf.output(temp_pdf_path, dest="F")
+
 
     # Read the PDF file as bytes
     with open(temp_pdf_path, "rb") as f:
